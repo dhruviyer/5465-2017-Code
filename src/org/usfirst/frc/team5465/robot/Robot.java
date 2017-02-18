@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends IterativeRobot {
 	//high level class ops variables
 	private static RobotDrive robotDrive;
+	private static RobotShoot robotShoot;
 	DigitalInput dio5;
 	DigitalInput dio6;
 	DigitalInput dio0;
@@ -29,13 +30,14 @@ public class Robot extends IterativeRobot {
 	private static Joystick leftDriveJoystick;
 	private static Joystick rightDriveJoystick;
 	private static ADXRS450_Gyro gyro;
-	private static Encoder enc;
+
 	
 	//important port constants, check with electrical
 	final static int LEFT_JOYSTICK_PORT = 0;
 	final static int RIGHT_JOYSTICK_PORT = 1;
 	final static int SECOND_JOYSTICK_PORT = 2;
-	
+	final static int TALON_ENCODER_SHOOTER_PWM = 0;
+	final static int TALON_NO_ENCODER_SHOOTER_PWM = 1;
 	final static int LEFT_SIDE_DRIVE_PWM_PORT = 0;
 	final static int RIGHT_SIDE_DRIVE_PWM_PORT = 1;
 	
@@ -45,6 +47,7 @@ public class Robot extends IterativeRobot {
 
 	static boolean setPointIsSet = false;
 	static double setPoint = 0;
+	static int encCount = 0;
 	
 	SmartDashboard dashboard;
 
@@ -59,15 +62,11 @@ public class Robot extends IterativeRobot {
     	gyro.calibrate();
     	
      	robotDrive = new RobotDrive(LEFT_SIDE_DRIVE_PWM_PORT, RIGHT_SIDE_DRIVE_PWM_PORT, gyro);
+     	robotShoot = new RobotShoot(TALON_ENCODER_SHOOTER_PWM, TALON_NO_ENCODER_SHOOTER_PWM);
      	
     	dashboard = new SmartDashboard();
-    	/*
-    	dio5 = new DigitalInput(5);
-    	dio6 = new DigitalInput(6);
-    	dio0 = new DigitalInput(0);
-    	*/
-    	enc = new Encoder(5,6);
-    	
+
+    
     }
     
     public void autonomousInit() {
@@ -80,6 +79,7 @@ public class Robot extends IterativeRobot {
     
     public void teleopPeriodic() {
     	updateMags();
+    	/*
     	boolean turning = Math.abs(turnMag - 0.0) > 0.01;
     	
     	if(!turning)
@@ -90,19 +90,23 @@ public class Robot extends IterativeRobot {
     	{
     		robotDrive.drive(-1*forwardMag+turnMag, forwardMag+turnMag);
     		setPoint = gyro.getAngle();
+    	}*/
+    
+    	if(leftDriveJoystick.getRawButton(2))
+    	{
+    		robotShoot.setSpeed(leftDriveJoystick.getThrottle());
     	}
-     
+    	else
+    	{
+    		robotShoot.setSpeed(0);
+    	}
+    	
     	SmartDashboard.putNumber("Gyro", gyro.getAngle());
     	SmartDashboard.putNumber("Set Point", setPoint);
     	SmartDashboard.putNumber("TurnMag", turnMag);
     	SmartDashboard.putNumber("ForwardMag", forwardMag);
-    	SmartDashboard.putBoolean("Turning?", turning);
-    	SmartDashboard.putNumber("Encoder", enc.getDistance());
-    	/*
-    	SmartDashboard.putBoolean("dio5", dio5.get());
-    	SmartDashboard.putBoolean("dio6", dio6.get());
-    	SmartDashboard.putBoolean("dio0", dio0.get());
-    	*/
+    	//SmartDashboard.putBoolean("Turning?", turning);
+    	SmartDashboard.putNumber("Shooter", robotShoot.getEncoderValue());
 
     }
    
@@ -128,7 +132,7 @@ public class Robot extends IterativeRobot {
     public void teleopInit()
     {
     	setPoint = gyro.getAngle();
-    	enc.reset();
+  
     }
     public void testPeriodic() {
     

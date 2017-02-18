@@ -1,5 +1,7 @@
 package org.usfirst.frc.team5465.robot;
 
+import com.ctre.CANTalon;
+
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TalonSRX;
 
@@ -9,63 +11,36 @@ import edu.wpi.first.wpilibj.TalonSRX;
  * Handles all robot targeting and shooting ops
  */
 public class RobotShoot {
-	protected TalonSRX shooterMotor;
+	protected CANTalon shooterMotor1;
+	protected CANTalon shooterMotor2;
 	protected Solenoid feeder;
 	protected Solenoid hood;
 	
 	private final double SHOOTER_LOW_SPEED = 0.5;
 	private final double SHOOTER_HIGH_SPEED = 1.0;
 	
-	public RobotShoot(int motorPort, int feederPort, int hoodPort)
+	public RobotShoot(int motor1Port, int motor2Port)
 	{
-		shooterMotor = new TalonSRX(motorPort);
-		feeder = new Solenoid(feederPort);
-		hood = new Solenoid(hoodPort);
+		shooterMotor1 = new CANTalon(motor1Port);
+		
+		shooterMotor2 = new CANTalon(motor2Port);
+		
 	}
 	
-	
-	public void setHoodLowAngle()
+	public void setSpeed(double speed)
 	{
-		hood.set(false);
+		shooterMotor1.set(speed);
+		shooterMotor2.set(speed);
 	}
 	
-	public void setHoodHighAngle()
+	public void stopMotors()
 	{
-		hood.set(true);
+		shooterMotor1.stopMotor();
+		shooterMotor2.stopMotor();
 	}
 	
-	
-	public void setShooterSpeedNone()
+	public double getEncoderValue()
 	{
-		shooterMotor.stopMotor();
-	}
-	
-	
-	public void setShooterSpeedLow()
-	{
-		shooterMotor.setSpeed(SHOOTER_LOW_SPEED);
-	}
-	
-	public void setShooterSpeedHigh()
-	{
-		shooterMotor.setSpeed(SHOOTER_HIGH_SPEED);
-	}
-	
-	/***
-	 * Opens and closes piston door to shoot/not shoot balls without stopping flywheel
-	 */
-	public void shoot()
-	{
-		feeder.set(true);
-	}
-	
-	public void noShoot()
-	{
-		feeder.set(false);
-	}
-	
-	public double aquireDistance()
-	{
-		return 0.0;
+		return shooterMotor1.getAnalogInVelocity();
 	}
 }
