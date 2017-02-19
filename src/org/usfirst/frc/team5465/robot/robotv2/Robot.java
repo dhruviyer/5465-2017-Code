@@ -1,5 +1,8 @@
 package org.usfirst.frc.team54652017.robot;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -11,17 +14,20 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 /***
  * 
  * @author Dhruv
+ * @author Sachin
  * @version 1.0
  * 
  * Main robot class, integrates all functionality
  * 
  */
 
-public class Robot extends IterativeRobot {
+public class Robot extends IterativeRobot 
+{
 	//high level class ops variables
 	private static RobotDrive robotDrive;
 	private static RobotShoot robotShoot;
 	private static RobotConveyClimb robotConvey;
+	private static RobotUDP udpThread;
 	DigitalInput dio5;
 	DigitalInput dio6;
 	DigitalInput dio0;
@@ -53,18 +59,25 @@ public class Robot extends IterativeRobot {
 	//miscellaneous variables
     static double forwardMag = 0.0;
 	static double turnMag = 0.0;
-
+	
+	static String distance = "";
+	
 	static boolean setPointIsSet = false;
 	static double setPoint = 0;
 	static int encCount = 0;
 	
-	static boolean climbing = false;
-	//if false robot will go to conveyor (which is wanted for most of the match) , else go into climber
 	static boolean state = false;
-	//if false it will go into conveyor||climber mode, else go into shooter mode
+	//if true it will go into shooter mode,else go into conveyor||climber mode
+	static boolean climbing = false;
+	//if true robot will go to climber, else go to conveyor (which is wanted for most of the match)
 	static boolean hood = false;
-	//hood is true when button2 is pressed which extends the piston, else retracts it;
+	//hood is true when button2 is pressed which extends the piston, else retracts it
 	static double shooterspeed = 0.0;
+	
+	
+	//all the toggle bools
+	
+	static HashMap<String,Boolean> toggle = new HashMap<String,Boolean>();  
 	
 	SmartDashboard dashboard;
 
@@ -86,6 +99,12 @@ public class Robot extends IterativeRobot {
      	robotConvey = new RobotConveyClimb(CONVEYOR_TALONSR_PWMPORT,CONVEYER_SOLENOID_PORT);
      	robotConvey.start();
      	
+     	udpThread = new RobotUDP("UDP ThreadThread", 5465, 1024);
+     	udpThread.start();
+     	
+     	toggle.put("state",false);
+     	toggle.put("climbing", false);
+     	toggle.put("hood",false);
     	dashboard = new SmartDashboard();
     	
     }
@@ -119,14 +138,15 @@ public class Robot extends IterativeRobot {
     	}
     	**/
     	
+    	//toggle.get("state")
     	if(state == false) 
     	{
     		//go in here if state is false, or u wanna do the conveyor or climber system rather than shoot
-    		//!state = True
     		// The robotshooter will go into its stop state which will close the feeder and stop the motors in the shooter thread class
-    		// if conveyor is false then it will go to conveyor mode, else climber mode
+    		// if climbing is false then it will go to conveyor mode, else climber mode
     		robotShoot.startstop(false);
     		robotConvey.startstop(true);
+    		//toggle.get("climbing");
     		robotConvey.updateState(climbing);
     	}
     	
@@ -140,8 +160,11 @@ public class Robot extends IterativeRobot {
     		//start the shooter
     		robotShoot.startstop(true);
     		//update speed and if hood is true, then it will shoot high, else shoot low
+    		//toggle.get("hood");
     		robotShoot.updateSpeed(shooterspeed,hood);
     	}
+    	
+    	distance = udpThread.getString();
     	
     	SmartDashboard.putNumber("Gyro", gyro.getAngle());
     	SmartDashboard.putNumber("Set Point", setPoint);
@@ -149,7 +172,7 @@ public class Robot extends IterativeRobot {
     	SmartDashboard.putNumber("ForwardMag", forwardMag);
     	//SmartDashboard.putBoolean("Turning?", turning);
     	SmartDashboard.putNumber("Shooter", robotShoot.getEncoderValue());
-
+    	//SmartDashboard.putString("Distance to Target", distance);
     }
    
 
@@ -177,12 +200,18 @@ public class Robot extends IterativeRobot {
     
     public void updateVALS()
     {
-    	// if pressed it goes into climb mode, else it goes into conveyor mode
-    	climbing = leftDriveJoystick.getRawButton(3);
     	// if pressed it goes into shooter mode, else goes into conveyor/climb mode
     	state = leftDriveJoystick.getRawButton(2);
+    	// if pressed it goes into climb mode, else it goes into conveyor mode
+    	climbing = leftDriveJoystick.getRawButton(3);
     	// if pressed then hood is up, else hood is down
     	hood = rightDriveJoystick.getRawButton(2);
+    	
+    	/**Toggle Functionality
+    	 *if(leftDriveJoystick.getRawButton(2)) toggle.put("state", !toggle.get("state"));
+    	 * if(leftDriveJoystick.getRawButton(3)) toggle.put("climbing", !toggle.get("climbing"));
+    	 * if(rightDriveJoystick.getRawButton(2)) toggle.put("hood", !toggle.get("hood"));
+    	 */
     	// not sure about the mapping for dis
     	shooterspeed = rightDriveJoystick.getThrottle();
     }

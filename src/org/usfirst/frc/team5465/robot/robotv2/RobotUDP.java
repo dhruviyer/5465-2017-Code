@@ -56,6 +56,38 @@ public class RobotUDP extends Thread
 	
 	public String getString()
 	{
-		return receiveSentence;
+		String input = receiveSentence;
+		
+		if(input.contains("Y"))
+		{
+			//Sample String: Y 167 85 7.009
+			String[] array = input.split("\\s+");
+			double centerx = Integer.parseInt(array[1]);
+			double centery = Integer.parseInt(array[2]);
+			double height = Double.parseDouble(array[3]);
+			double width = Double.parseDouble(array[4]);
+			//System.out.println(array[1]);
+			
+			double heightreal = Math.min(height, width);
+			double widthreal = Math.max(height, width);
+			double distance = calcWidthDistance(widthreal);
+			//System.out.println(centerx + " " + centery + " " + heightreal + " " + widthreal);
+			return Double.toString(distance);
+		}
+		else
+		{
+			return ("Nothing");
+		}
+		
+	}
+	
+	public static double calcWidthDistance(double x)
+	{
+		return -0.0003* Math.pow(x, 3) + 0.0881 * x * x - 10.336*x + 553.9;
+	}
+	
+	public static double calcHeightDistance(double x)
+	{
+		return -0.0136 * Math.pow(x, 3) + 1.2378* x * x - 41.4* x + 596.2;
 	}
 }
