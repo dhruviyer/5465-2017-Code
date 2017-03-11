@@ -1,46 +1,79 @@
 package org.usfirst.frc.team5465.robot;
 
-import com.ctre.CANTalon;
-
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.TalonSRX;
 
-/***
- * 
- * @author Dhruv
- * Handles all robot targeting and shooting ops
- */
-public class RobotShoot {
-	protected CANTalon shooterMotor1;
-	protected CANTalon shooterMotor2;
-	protected Solenoid feeder;
-	protected Solenoid hood;
+import org.usfirst.frc.team5465.robot.RobotAggetator;
+
+import com.ctre.*;
+
+public class RobotShoot extends Thread
+{
+	private CANTalon shooterMotor1;
+	private CANTalon shooterMotor2;
+	private Solenoid hoodforward;
+	private Solenoid hoodreverse;
+	private RobotAggetator aggetate;
 	
 	private final double SHOOTER_LOW_SPEED = 0.5;
 	private final double SHOOTER_HIGH_SPEED = 1.0;
 	
-	public RobotShoot(int motor1Port, int motor2Port)
+	private double speed;
+	private boolean angle;
+	private boolean start;
+	private boolean go;
+	
+	public RobotShoot(int shootermotorport, int shootermotor1port, int solenoidportforward, int solenoidportreverse, int aggetateport)
 	{
-		shooterMotor1 = new CANTalon(motor1Port);
+		//shooterMotor1 = new CANTalon(shootermotorport);
+		aggetate = new RobotAggetator(aggetateport);
+		aggetate.start();
 		
-		shooterMotor2 = new CANTalon(motor2Port);
+		shooterMotor2 = new CANTalon(shootermotor1port);
+		hoodforward = new Solenoid(solenoidportforward);
+		hoodreverse = new Solenoid(solenoidportreverse);
+		angle = false;
+		speed = 0;
+		go = true;
+	}
+	
+	
+	public void run()
+	{
+		while(go)
+		{
+			this.move();
+		}
 		
 	}
 	
-	public void setSpeed(double speed)
+	public void move()
 	{
-		shooterMotor1.set(speed);
-		shooterMotor2.set(speed);
+		if(angle)
+		{
+			hoodforward.set(true);
+			hoodreverse.set(false);
+		}
+		else
+		{
+			hoodforward.set(false);
+			hoodreverse.set(true);
+		}
+		
+		//shooterMotor1.set(speed);
+		//shooterMotor2.set(speed);
+		aggetate.updateState(true);
 	}
 	
-	public void stopMotors()
+	public void updateVals(boolean angle,double speed)
 	{
-		shooterMotor1.stopMotor();
-		shooterMotor2.stopMotor();
+		this.angle = angle;
+		this.speed = speed;
 	}
 	
-	public double getEncoderValue()
+	public void stopThread()
 	{
-		return shooterMotor1.getAnalogInVelocity();
+		go = false;
 	}
 }
+
