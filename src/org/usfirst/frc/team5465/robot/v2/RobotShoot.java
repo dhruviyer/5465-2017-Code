@@ -3,8 +3,6 @@ package org.usfirst.frc.team5465.robot;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.Solenoid;
 
-import org.usfirst.frc.team5465.robot.RobotAggetator;
-
 import com.ctre.*;
 
 public class RobotShoot extends Thread
@@ -29,6 +27,7 @@ public class RobotShoot extends Thread
 		aggetate = new RobotAggetator(aggetateport);
 		aggetate.start();
 		
+		shooterMotor1 = new CANTalon(shootermotorport);
 		shooterMotor2 = new CANTalon(shootermotor1port);
 		hoodforward = new Solenoid(solenoidportforward);
 		hoodreverse = new Solenoid(solenoidportreverse);
