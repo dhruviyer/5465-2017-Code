@@ -3,7 +3,7 @@ package org.usfirst.frc.team5465.robot;
 import com.ctre.CANTalon;
 
 import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.TalonSRX;
+import edu.wpi.first.wpilibj.Victor;
 
 /***
  * 
@@ -12,18 +12,18 @@ import edu.wpi.first.wpilibj.TalonSRX;
  */
 public class RobotShoot {
 	protected CANTalon shooterMotor1;
-	protected CANTalon shooterMotor2;
+	protected Victor shooterMotor2;
 	protected Solenoid feeder;
 	protected Solenoid hood;
 	
 	private final double SHOOTER_LOW_SPEED = 0.5;
 	private final double SHOOTER_HIGH_SPEED = 1.0;
 	
-	public RobotShoot(int motor1Port, int motor2Port)
+	public RobotShoot(int CANTalonPort, int VictorPort)
 	{
-		shooterMotor1 = new CANTalon(motor1Port);
+		shooterMotor1 = new CANTalon(CANTalonPort);
 		
-		shooterMotor2 = new CANTalon(motor2Port);
+		shooterMotor2 = new Victor(VictorPort);
 		
 	}
 	
@@ -35,8 +35,8 @@ public class RobotShoot {
 	
 	public void stopMotors()
 	{
-		shooterMotor1.stopMotor();
-		shooterMotor2.stopMotor();
+		shooterMotor1.set(0);
+		shooterMotor2.set(0);
 	}
 	
 	public double getEncoderValue()
