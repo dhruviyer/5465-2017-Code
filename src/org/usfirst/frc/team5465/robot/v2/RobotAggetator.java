@@ -1,4 +1,4 @@
-package org.usfirst.frc.team54652017.robot;
+package org.usfirst.frc.team5465.robot;
 
 import edu.wpi.first.wpilibj.*;
 import java.io.*;
@@ -17,7 +17,7 @@ public class RobotAggetator extends Thread
 
 	public void run()
 	{
-		System.out.println("starting agitator");
+		//System.out.println("starting agitator");
 		while(true)
 		{
 			if(state) aggetator.set(1);

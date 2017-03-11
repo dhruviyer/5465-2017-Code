@@ -1,4 +1,3 @@
-
 package org.usfirst.frc.team5465.robot;
 
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
@@ -12,39 +11,38 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 /***
  * 
  * @author Dhruv
+ * @author Sachin Konan
  * @version 1.0
  * 
  * Main robot class, integrates all functionality
  * 
  */
 
-public class Robot extends IterativeRobot {
+public class Robot extends IterativeRobot 
+{
 	//high level class ops variables
 	private static RobotDrive robotDrive;
-	private static RobotShoot robotShoot;
-	DigitalInput dio5;
-	DigitalInput dio6;
-	DigitalInput dio0;
-    
-	//lower level controller ops variables
-	private static Joystick leftDriveJoystick;
-	private static Joystick rightDriveJoystick;
+	private static JoystickThread joystick;
 	private static ADXRS450_Gyro gyro;
 
+	private static RobotUDP udp;
 	
 	//important port constants, check with electrical
 	final static int LEFT_JOYSTICK_PORT = 0;
-	final static int RIGHT_JOYSTICK_PORT = 1;
-	final static int SECOND_JOYSTICK_PORT = 2;
-	final static int TALON_ENCODER_SHOOTER_PWM = 0;
-	final static int TALON_NO_ENCODER_SHOOTER_PWM = 1;
+	final static int RIGHT_JOYSTICK_PORT = 5;
+	
 	final static int LEFT_SIDE_DRIVE_PWM_PORT = 0;
 	final static int RIGHT_SIDE_DRIVE_PWM_PORT = 1;
 	
-	//miscellaneous variables
-    static double forwardMag = 0.0;
-	static double turnMag = 0.0;
+	final static int SHOOTER_TALONSRX_CAN_PORT = 1;
+	final static int SHOOTER_TALONSRX_CAN_PORT1 = 2;
+	final static int AGGETATE_TALONSRC_CAN_PORT = 3;
+	
 
+	final static int HOOD_SOLENOID_PORT = 0;
+	final static int FEEDER_SOLENOID_PORT = 1;
+	final static int CONVEYER_SOLENOID_PORT = 2;
+	
 	static boolean setPointIsSet = false;
 	static double setPoint = 0;
 	static int encCount = 0;
@@ -52,18 +50,19 @@ public class Robot extends IterativeRobot {
 	SmartDashboard dashboard;
 
 	
-    public void robotInit() {
-   
-    	
-    	leftDriveJoystick = new Joystick(LEFT_JOYSTICK_PORT);
-    	rightDriveJoystick = new Joystick(RIGHT_JOYSTICK_PORT);
-    	
+    public void robotInit() 
+    {
     	gyro = new ADXRS450_Gyro();
     	gyro.calibrate();
     	
      	robotDrive = new RobotDrive(LEFT_SIDE_DRIVE_PWM_PORT, RIGHT_SIDE_DRIVE_PWM_PORT, gyro);
-     	robotShoot = new RobotShoot(TALON_ENCODER_SHOOTER_PWM, TALON_NO_ENCODER_SHOOTER_PWM);
      	
+     	udp = new RobotUDP("UDP Thread", 5800, 1024);
+     	udp.start();
+     	
+    	joystick = new JoystickThread();
+    	joystick.start();
+    	
     	dashboard = new SmartDashboard();
 
     
@@ -73,13 +72,16 @@ public class Robot extends IterativeRobot {
     	
     }
 
-    public void autonomousPeriodic() {
+    public void autonomousPeriodic() 
+    {
     	robotDrive.stopMotors();
     }
     
-    public void teleopPeriodic() {
-    	updateMags();
-    	/*
+    public void teleopPeriodic() 
+    {    	
+    	double forwardMag = joystick.getForward();
+    	double turnMag = joystick.getTurn();
+    	
     	boolean turning = Math.abs(turnMag - 0.0) > 0.01;
     	
     	if(!turning)
@@ -90,50 +92,29 @@ public class Robot extends IterativeRobot {
     	{
     		robotDrive.drive(-1*forwardMag+turnMag, forwardMag+turnMag);
     		setPoint = gyro.getAngle();
-    	}*/
-    
-    	if(leftDriveJoystick.getRawButton(2))
-    	{
-    		robotShoot.setSpeed(leftDriveJoystick.getThrottle());
-    	}
-    	else
-    	{
-    		robotShoot.setSpeed(0);
     	}
     	
     	SmartDashboard.putNumber("Gyro", gyro.getAngle());
     	SmartDashboard.putNumber("Set Point", setPoint);
     	SmartDashboard.putNumber("TurnMag", turnMag);
     	SmartDashboard.putNumber("ForwardMag", forwardMag);
-    	//SmartDashboard.putBoolean("Turning?", turning);
-    	SmartDashboard.putNumber("Shooter", robotShoot.getEncoderValue());
-
+    	SmartDashboard.putString("Receive UDP String", udp.getRawSentence());
+    	//SmartDashboard.putBoolean("Inframe", udp.getInframe());
+    	//SmartDashboard.putNumber("Centerx", udp.getCenterX());
+    	
     }
    
-    public void updateMags()
-    {
-    	if(leftDriveJoystick.getRawButton(1))
-    	{
-    		forwardMag = leftDriveJoystick.getY()*0.25;
-    	}
-    	else
-    	{
-    		forwardMag = leftDriveJoystick.getY();
-    	}
-    	
-    	if(rightDriveJoystick.getRawButton(1))
-    	{
-    		turnMag = rightDriveJoystick.getX()*0.25;
-    	}else
-    	{
-    		turnMag = rightDriveJoystick.getX();
-    	}
-    }
     
     public void teleopInit()
     {
     	setPoint = gyro.getAngle();
-  
+    	joystick.changeState(true);
+    }
+    
+    public void disabledPeriodic()
+    {
+    	joystick.changeState(false);
+    	robotDrive.stopMotors();
     }
     public void testPeriodic() {
     
