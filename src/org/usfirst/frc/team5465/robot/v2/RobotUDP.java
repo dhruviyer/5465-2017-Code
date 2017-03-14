@@ -61,7 +61,6 @@ public class RobotUDP extends Thread
 	   			double height = Double.parseDouble(array[3]);
 	   			double width = Double.parseDouble(array[4]);
 	   			
-	   			double heightreal = Math.min(height, width);
 	   			double widthreal = Math.max(height, width);
 	   			distance = calcWidthDistance(widthreal);
 	   		}

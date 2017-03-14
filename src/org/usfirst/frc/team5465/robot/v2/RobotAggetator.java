@@ -1,7 +1,6 @@
 package org.usfirst.frc.team5465.robot;
 
 import edu.wpi.first.wpilibj.*;
-import java.io.*;
 
 public class RobotAggetator extends Thread
 {
