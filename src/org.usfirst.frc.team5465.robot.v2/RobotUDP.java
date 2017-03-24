@@ -51,6 +51,7 @@ public class RobotUDP extends Thread
            }
            
            receiveSentence = new String(receivePacket.getData());
+           
            if(receiveSentence.contains("Y"))
            {
 	   			//Sample String: Y 167 85 7.009
@@ -72,6 +73,7 @@ public class RobotUDP extends Thread
 	   			centerx = 0;
 	   			centery = 0;
 	   		}
+	   	
         }
 	}
 	

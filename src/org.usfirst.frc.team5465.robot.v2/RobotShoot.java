@@ -1,6 +1,7 @@
 package org.usfirst.frc.team5465.robot;
 
 import com.ctre.CANTalon;
+import com.ctre.CANTalon.FeedbackDevice;
 
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TalonSRX;
@@ -14,15 +15,9 @@ public class RobotShoot extends Thread
 {
 	private CANTalon shooterMotor1;
 	private CANTalon shooterMotor2;
-	//private Solenoid hoodforward;
-	//private Solenoid hoodreverse;
-	//private Solenoid feederforward;
-	//private Solenoid feederreverse;
-	
 	private RobotAggetator aggetate;
 	
 	private double speed;
-	private boolean angle;
 
 	private boolean go;
 	
@@ -33,11 +28,11 @@ public class RobotShoot extends Thread
 		aggetate.start();
 		
 		shooterMotor1 = new CANTalon(shootermotorport);
+		shooterMotor1.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+		shooterMotor1.reverseSensor(true);
+
+		shooterMotor1.setPosition(0);
 		shooterMotor2 = new CANTalon(shootermotor1port);
-		//hoodforward = new Solenoid(solenoidportforward);
-		//hoodreverse = new Solenoid(solenoidportreverse);
-		
-		angle = false;
 		speed = 0;
 		go = false;
 	}
@@ -55,47 +50,46 @@ public class RobotShoot extends Thread
 	
 	public void move()
 	{
-		/**
-		if(angle)
-		{
-			hoodforward.set(true);
-			hoodreverse.set(false);
-		}
-		else
-		{
-			hoodforward.set(false);
-			hoodreverse.set(true);
-		}
-		**/
-		
 		shooterMotor1.set(speed);
 		shooterMotor2.set(speed);
-		aggetate.updateState(true);
+		aggetate.updateState(false);
 	}
 	
 	public void feedbackSpin()
 	{
-		double projectedspin = this.speed;
-		double realspin = this.getEncoderValue();
+		double startpoint = -0.5;
+		double speed1 = this.speed;
+		double error = speed1 - this.getEncSpeed1();
 		
-		while(Math.abs(projectedspin - realspin ) > 10)
+		while(Math.abs(error) > 10)
 		{
-			if(projectedspin - realspin > 0)
+			if(error >= 0)
 			{
-				
+				shooterMotor1.set(startpoint +getIncrement(error) );
+				shooterMotor2.set(startpoint +getIncrement(error));
 			}
+			else
+			{
+				shooterMotor1.set(startpoint  - getIncrement(error) );
+				shooterMotor2.set(startpoint - getIncrement(error));
+			}
+			error = this.speed - this.getEncSpeed1();
 		}
 	}
 	
-	public double getEncoderValue()
+	public double getIncrement(double error)
 	{
-		//may need to map this value to a better range
-		return shooterMotor1.getAnalogInVelocity();
+		double a = 0;
+		double abserror = Math.abs(error);
+		if(abserror > 500) a = 0.01;
+		else if(abserror > 100) a= 0.005;
+		else if(abserror > 10) a = 0.0001;
+		return a;
 	}
 	
-	public void updateVals(boolean angle,double speed)
+	
+	public void updateVals(double speed)
 	{
-		this.angle = angle;
 		this.speed = speed;
 	}
 	
@@ -111,5 +105,10 @@ public class RobotShoot extends Thread
 	public void changeState(boolean x)
 	{
 		go = x;
+	}
+	
+	public double getEncSpeed1()
+	{
+		return shooterMotor1.getSpeed();
 	}
 }

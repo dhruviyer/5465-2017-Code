@@ -1,16 +1,18 @@
 package org.usfirst.frc.team5465.robot;
 
-import edu.wpi.first.wpilibj.*;
+import com.ctre.CANTalon;
+
+import edu.wpi.first.wpilibj.Timer;
 
 public class RobotAggetator extends Thread
 {
-	protected Talon aggetator;
-	protected boolean state;
+	private CANTalon aggetator;
+	private boolean state;
 	
 	public RobotAggetator(int aggetatorAddress)
 	{
 		//aggetatorAddress: PWM Channel
-		aggetator = new Talon(aggetatorAddress);
+		aggetator = new CANTalon(aggetatorAddress);
 		state = false;
 	}
 
@@ -19,7 +21,13 @@ public class RobotAggetator extends Thread
 		//System.out.println("starting agitator");
 		while(true)
 		{
-			if(state) aggetator.set(1);
+			if(state)
+			{
+				aggetator.set(0.25);
+				Timer.delay(1);
+				aggetator.set(-0.25);
+				Timer.delay(1);
+			}
 			else aggetator.set(0);
 		}
 	}
