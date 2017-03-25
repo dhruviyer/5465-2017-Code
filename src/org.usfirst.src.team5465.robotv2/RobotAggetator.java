@@ -23,10 +23,10 @@ public class RobotAggetator extends Thread
 		{
 			if(state)
 			{
-				aggetator.set(0.25);
-				Timer.delay(1);
-				aggetator.set(-0.25);
-				Timer.delay(1);
+				aggetator.set(0.2);
+				//Timer.delay(1);
+				//aggetator.set(-0.25);
+				//Timer.delay(1);
 			}
 			else aggetator.set(0);
 		}

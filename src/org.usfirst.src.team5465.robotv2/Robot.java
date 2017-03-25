@@ -135,6 +135,7 @@ public class Robot extends IterativeRobot
     	if(shooter)
     	{
     		robotShoot.changeState(true);
+    		robotShoot.feedbackSpinEnable(10);
     		robotShoot.updateVals(-1*shootspeed);
     	}
     	else
@@ -143,11 +144,9 @@ public class Robot extends IterativeRobot
     	}
     	
     	boolean status = false;
-    	//if(joystick.getAuto()) status = robotAim();
-    	
-    	highestSpeed = Math.max(highestSpeed, robotShoot.getEncSpeed1());
-    	if(robotShoot.getEncSpeed1() == 0)
-    		highestSpeed = 0;
+    	if(joystick.getAuto()) status = robotAim();
+    
+    	SmartDashboard.putString("UDP Raw Data", udp.getRawSentence());
     	SmartDashboard.putBoolean("Conveyor On or Off", conveyor);
     	SmartDashboard.putBoolean("Shooter on or off", shooter);
     	SmartDashboard.putNumber("Gyro", gyro.getAngle());
@@ -156,9 +155,13 @@ public class Robot extends IterativeRobot
     	SmartDashboard.putNumber("ForwardMag", forwardMag);
     	SmartDashboard.putNumber("Conveyor data", conveyspeed);
     	SmartDashboard.putNumber("Shooter data", shootspeed);
-    	SmartDashboard.putNumber("Real Shooter Speed 1", robotShoot.getEncSpeed1());
+    	SmartDashboard.putNumber("Voltage", robotShoot.getVoltage());
     	//SmartDashboard.putNumber("Real Shooter Speed 2", robotShoot.getEncSpeed2());
     	SmartDashboard.putBoolean("Auto Status", status);
+    	//SmartDashboard.putNumber("ShooterP", 0);
+    	//SmartDashboard.putNumber("ShooterI", 0);
+    	//SmartDashboard.putNumber("ShooterD", 0);
+    	//SmartDashboard.putNumber("ShooterSpeed", 0);
     }
    
     public boolean robotAim()
@@ -167,25 +170,64 @@ public class Robot extends IterativeRobot
 		double center = udp.getCenterX();
 		Timer timeout = new Timer();
 		timeout.start();
-    	while(Math.abs(center - CAMERA_CENTER)  >= 5 && timeout.get() < 10 && joystick.getAuto() && udp.getRawSentence() != null)
+		double previousTime = timeout.get();
+		double currentTime = timeout.get();
+		
+		double err = 0;
+		double errsum = 0;
+		double lastErr = 0;
+		double timechange = 0;
+		
+    	while(Math.abs(center - CAMERA_CENTER)  >= 5 && joystick.getAuto() && udp.getRawSentence() != null)
     	{
     		if(udp.getInframe())
     		{
-    			if(center - CAMERA_CENTER >= 0)
+    			err = center - CAMERA_CENTER;
+    			SmartDashboard.putNumber("Error", err);
+    			
+    			currentTime = timeout.get();
+    			timechange = currentTime-previousTime;
+    			previousTime = currentTime;
+    			
+    			
+    			errsum += err*timechange;
+    			
+    			double p = (center - CAMERA_CENTER)/320;
+    			double d = (err-lastErr)/timechange;
+    			double i = errsum;
+    			
+    			lastErr = err;
+    			
+    			double pGain = SmartDashboard.getNumber("P Gain", 0);
+    			double iGain = SmartDashboard.getNumber("I Gain", 0);
+    			double dGain = SmartDashboard.getNumber("D Gain", 0);
+    			
+    			double out = pGain*p+iGain*i+dGain*d;
+    			if(center - CAMERA_CENTER > 2)
     			{
     				//turn left
-    				robotDrive.drive(-0.08, 0.08);
+    				robotDrive.drive(out, out);
+    				//robotDrive.drive(-0.4, -0.4);
     			}
-    			else
+    			else if(center - CAMERA_CENTER < -2)
     			{
     				//turn right slowly
-    				robotDrive.drive(0.08, -0.08);
+    				robotDrive.drive(out, out);
+    				//robotDrive.drive(0.4, 0.4);
     			}
+    			setPoint = gyro.getAngle();
     		}
     		else
     		{
     			//turn right fast
-    			robotDrive.drive(-0.25, 0.25);
+    			robotDrive.drive(-0.38, -0.38);
+    			setPoint = gyro.getAngle();
+    			
+    			err = 0;
+    			errsum = 0;
+    			lastErr = 0;
+    			timechange = 0;
+    			
     		}
     		center = udp.getCenterX();
     	}

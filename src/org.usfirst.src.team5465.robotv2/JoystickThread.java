@@ -18,6 +18,8 @@ public class JoystickThread extends Thread
 	static boolean shooter = false;
 	static boolean auto = false;
 	
+	static boolean pidShoot = false;
+	
 	static int LEFT_JOYSTICK_PORT = 0;
 	static int RIGHT_JOYSTICK_PORT = 1;
 	
@@ -69,6 +71,8 @@ public class JoystickThread extends Thread
     	rightSpeed = rightDriveJoystick.getThrottle();
     	auto = rightDriveJoystick.getRawButton(1);
     	
+    	pidShoot = leftDriveJoystick.getRawButton(11);
+    	
     	Timer.delay(0.175);
     }
 	
@@ -118,6 +122,11 @@ public class JoystickThread extends Thread
 	public boolean getAuto()
 	{
 		return auto;
+	}
+	
+	public boolean getPIDShoot()
+	{
+		return pidShoot;
 	}
 	
 }

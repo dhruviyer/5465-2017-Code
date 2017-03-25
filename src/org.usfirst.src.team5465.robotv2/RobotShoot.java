@@ -5,6 +5,8 @@ import com.ctre.CANTalon.FeedbackDevice;
 
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TalonSRX;
+import edu.wpi.first.wpilibj.command.PIDSubsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /***
  * 
@@ -16,6 +18,7 @@ public class RobotShoot extends Thread
 	private CANTalon shooterMotor1;
 	private CANTalon shooterMotor2;
 	private RobotAggetator aggetate;
+	private PIDSubsystem motorSpeed;
 	
 	private double speed;
 
@@ -32,9 +35,39 @@ public class RobotShoot extends Thread
 		shooterMotor1.reverseSensor(true);
 
 		shooterMotor1.setPosition(0);
+		
 		shooterMotor2 = new CANTalon(shootermotor1port);
+		
 		speed = 0;
 		go = false;
+		
+		motorSpeed = new PIDSubsystem(5, 0, 0) {
+			
+			
+			
+			@Override
+			protected void initDefaultCommand() {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			protected void usePIDOutput(double output) {
+				shooterMotor1.pidWrite(output);
+				shooterMotor2.pidWrite(output);
+				
+			}
+			
+			@Override
+			protected double returnPIDInput() {
+				return shooterMotor1.getSpeed();
+			}
+		};
+		
+		motorSpeed.setInputRange(0, 26040);
+		motorSpeed.setOutputRange(0, 1);
+		motorSpeed.setSetpoint(0);
+		motorSpeed.enable();
 	}
 	
 	
@@ -50,31 +83,22 @@ public class RobotShoot extends Thread
 	
 	public void move()
 	{
-		shooterMotor1.set(speed);
-		shooterMotor2.set(speed);
-		aggetate.updateState(false);
+		shooterMotor1.set(speed*10/12);
+		shooterMotor2.set(speed*10/12);
+		aggetate.updateState(true);
 	}
 	
-	public void feedbackSpin()
+	public void getMap()
 	{
-		double startpoint = -0.5;
-		double speed1 = this.speed;
-		double error = speed1 - this.getEncSpeed1();
+		double lowerspeed = 0;
+		double upperspeed = 22640;
+		double newspin = this.speed/22640 * -1;
 		
-		while(Math.abs(error) > 10)
-		{
-			if(error >= 0)
-			{
-				shooterMotor1.set(startpoint +getIncrement(error) );
-				shooterMotor2.set(startpoint +getIncrement(error));
-			}
-			else
-			{
-				shooterMotor1.set(startpoint  - getIncrement(error) );
-				shooterMotor2.set(startpoint - getIncrement(error));
-			}
-			error = this.speed - this.getEncSpeed1();
-		}
+	}
+	public void feedbackSpinEnable(double rpm)
+	{
+		motorSpeed.setSetpoint(rpm);
+		
 	}
 	
 	public double getIncrement(double error)
@@ -97,9 +121,15 @@ public class RobotShoot extends Thread
 	{
 		shooterMotor1.set(0);
 		shooterMotor2.set(0);
+		motorSpeed.disable();
 		aggetate.updateState(false);
 	}
 	
+	public double getVoltage()
+	{
+		return shooterMotor1.getOutputVoltage();
+	}
+
 	
 	
 	public void changeState(boolean x)
@@ -107,7 +137,7 @@ public class RobotShoot extends Thread
 		go = x;
 	}
 	
-	public double getEncSpeed1()
+	public double getSpeed()
 	{
 		return shooterMotor1.getSpeed();
 	}
